@@ -10,6 +10,14 @@
 #   scripts/verify.sh --a11y          only step 6 (route-level a11y scan)
 set -uo pipefail
 
+# Always operate relative to the repo root, regardless of the caller's cwd —
+# verify-gate.sh invokes this without cd-ing first, and portability across
+# npm/yarn/pnpm (ADR-005) means we can't assume any package-manager CLI is
+# on PATH; node_modules/.bin is the one thing every package manager creates
+# identically, so binaries are called from there, never via `pnpm exec`.
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BIN="./node_modules/.bin"
+
 JSON_MODE=false
 UNIT_ONLY=false
 A11Y_ONLY=false
@@ -29,13 +37,13 @@ done
 # failure-count-strategy: "boolean" (0 or 1) | "count:<regex-with-one-capture-group>"
 STEP_NAMES=(format typecheck lint unit e2e build a11y)
 STEP_CMDS=(
-  "pnpm exec prettier --check ."
-  "pnpm exec tsc -b"
-  "pnpm exec eslint ."
-  "pnpm exec vitest run"
-  "pnpm exec playwright test --grep @critical"
-  "pnpm exec vite build"
-  "pnpm exec playwright test --grep @a11y"
+  "$BIN/prettier --check ."
+  "$BIN/tsc -b"
+  "$BIN/eslint ."
+  "$BIN/vitest run"
+  "$BIN/playwright test --grep @critical"
+  "$BIN/vite build"
+  "$BIN/playwright test --grep @a11y"
 )
 
 run_step() {
@@ -74,7 +82,7 @@ steps_to_run=()
 if $UNIT_ONLY; then
   steps_to_run=(3)
   if [[ -n "$UNIT_FILE" ]]; then
-    STEP_CMDS[3]="pnpm exec vitest run \"$UNIT_FILE\""
+    STEP_CMDS[3]="$BIN/vitest run \"$UNIT_FILE\""
   fi
 elif $A11Y_ONLY; then
   steps_to_run=(6)

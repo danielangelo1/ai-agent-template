@@ -14,11 +14,14 @@ target="$(node -e "
 
 [[ -z "$target" || ! -f "$target" ]] && exit 0
 
-pnpm exec prettier --write "$target" >/dev/null 2>&1 || true
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+BIN="$REPO_ROOT/node_modules/.bin"
+
+"$BIN/prettier" --write "$target" >/dev/null 2>&1 || true
 
 case "$target" in
   *.ts|*.tsx|*.js|*.jsx)
-    pnpm exec eslint --fix "$target" >/dev/null 2>&1 || true
+    "$BIN/eslint" --fix "$target" >/dev/null 2>&1 || true
     ;;
 esac
 

@@ -19,34 +19,46 @@ deny() {
 # scratch dir (/tmp, /private/tmp, /var/folders/**, anything with
 # "scratchpad" in the path); deny everything else — including the repo
 # root itself (that would wipe the whole project) and any path outside it.
-if echo "$command" | grep -Eq 'rm[[:space:]]+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r)\b'; then
-  rm_verdict="$(node -e "
-    const path = require('node:path');
-    const repoRoot = path.resolve(process.argv[1]);
-    const command = process.argv[2];
+#
+# The command is split into segments on shell separators (; && || | and
+# newlines) FIRST, and only a segment whose own first word is "rm" is
+# inspected — this avoids false positives where a later, unrelated command
+# in the same multi-line call happens to mention a path that looks like the
+# repo root (e.g. `git clone <repo-root> /tmp/x` right after an unrelated
+# `rm -rf` on a different line).
+rm_verdict="$(node -e "
+  const path = require('node:path');
+  const repoRoot = path.resolve(process.argv[1]);
+  const command = process.argv[2];
 
-    const tokens = command
-      .replace(/^.*?\brm\b/, '')
-      .trim()
-      .split(/\s+/)
-      .filter((t) => t && !t.startsWith('-'));
+  const isScratch = (p) => /^\/(private\/)?tmp\//.test(p) || /^\/var\/folders\//.test(p) || /scratchpad/.test(p);
+  const isRmRf = (flags) => /r/.test(flags) && /f/.test(flags);
 
-    if (tokens.length === 0) { console.log('deny:no target path found in the command'); process.exit(0); }
+  const segments = command.split(/(?:;|&&|\|\||\||\n)+/).map((s) => s.trim()).filter(Boolean);
 
-    const isScratch = (p) => /^\/(private\/)?tmp\//.test(p) || /^\/var\/folders\//.test(p) || /scratchpad/.test(p);
+  for (const segment of segments) {
+    const words = segment.split(/\s+/);
+    if (words[0] !== 'rm') continue;
 
-    for (const t of tokens) {
+    const flagWords = words.slice(1).filter((w) => w.startsWith('-'));
+    const hasRf = flagWords.some((w) => isRmRf(w.replace(/^-+/, '')));
+    if (!hasRf) continue;
+
+    const targets = words.slice(1).filter((w) => w && !w.startsWith('-'));
+    if (targets.length === 0) { console.log('deny:no target path found in \'' + segment + '\''); process.exit(0); }
+
+    for (const t of targets) {
       const resolved = path.resolve(repoRoot, t);
       if (isScratch(resolved)) continue;
       if (resolved === repoRoot) { console.log('deny:target is the repository root itself'); process.exit(0); }
-      if (!resolved.startsWith(repoRoot + path.sep)) { console.log('deny:target ('+resolved+') resolves outside the repository root'); process.exit(0); }
+      if (!resolved.startsWith(repoRoot + path.sep)) { console.log('deny:target (' + resolved + ') resolves outside the repository root'); process.exit(0); }
     }
-    console.log('allow');
-  " "$REPO_ROOT" "$command")"
+  }
+  console.log('allow');
+" "$REPO_ROOT" "$command")"
 
-  if [[ "$rm_verdict" != "allow" ]]; then
-    deny "rm -rf blocked: ${rm_verdict#deny:}. Allowed: paths inside the repo (below its root) or a recognized scratch dir (/tmp, /private/tmp, /var/folders/**, *scratchpad*)."
-  fi
+if [[ "$rm_verdict" != "allow" ]]; then
+  deny "rm -rf blocked: ${rm_verdict#deny:}. Allowed: paths inside the repo (below its root) or a recognized scratch dir (/tmp, /private/tmp, /var/folders/**, *scratchpad*)."
 fi
 
 # force-push
