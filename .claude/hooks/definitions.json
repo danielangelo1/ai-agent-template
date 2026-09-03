@@ -1,0 +1,77 @@
+{
+  "$comment": "Single logical source for hooks. scripts/gen-hooks.mjs reads this to emit .github/hooks/*.json (Copilot adapter, ADR-001). Editing hook behavior: edit the referenced .sh script; edit event wiring: edit this file, then run `pnpm gen-hooks`.",
+  "hooks": [
+    {
+      "id": "guard-destructive",
+      "claudeEvent": "PreToolUse",
+      "claudeMatcher": "Bash",
+      "copilotEvent": "preToolUse",
+      "script": ".claude/hooks/guard-destructive.sh",
+      "blocking": true,
+      "description": "Deny rm -rf outside scratch paths, force-push, hard reset, direct secret reads."
+    },
+    {
+      "id": "guard-scope",
+      "claudeEvent": "PreToolUse",
+      "claudeMatcher": "Write|Edit",
+      "copilotEvent": "preToolUse",
+      "script": ".claude/hooks/guard-scope.sh",
+      "blocking": true,
+      "description": "Deny writes that resolve outside the repository root."
+    },
+    {
+      "id": "guard-dangerous-html",
+      "claudeEvent": "PreToolUse",
+      "claudeMatcher": "Write|Edit",
+      "copilotEvent": "preToolUse",
+      "script": ".claude/hooks/guard-dangerous-html.sh",
+      "blocking": true,
+      "description": "Deny dangerouslySetInnerHTML without a sanitizer call in the same edit."
+    },
+    {
+      "id": "redact-secrets",
+      "claudeEvent": "PostToolUse",
+      "claudeMatcher": "Bash",
+      "copilotEvent": "postToolUse",
+      "script": ".claude/hooks/redact-secrets.sh",
+      "blocking": false,
+      "description": "Redact likely secrets/tokens from Bash output before it re-enters context."
+    },
+    {
+      "id": "format",
+      "claudeEvent": "PostToolUse",
+      "claudeMatcher": "Write|Edit",
+      "copilotEvent": "postToolUse",
+      "script": ".claude/hooks/format.sh",
+      "blocking": false,
+      "description": "Run prettier --write (+ eslint --fix for JS/TS) on the edited file."
+    },
+    {
+      "id": "verify-gate",
+      "claudeEvent": "Stop",
+      "claudeMatcher": null,
+      "copilotEvent": "agentStop",
+      "script": ".claude/hooks/verify-gate.sh",
+      "blocking": true,
+      "description": "The green gate. Runs scripts/verify.sh --json and applies the ratchet (SPEC.md §5)."
+    },
+    {
+      "id": "verify-gate-subagent",
+      "claudeEvent": "SubagentStop",
+      "claudeMatcher": null,
+      "copilotEvent": "subagentStop",
+      "script": ".claude/hooks/verify-gate.sh",
+      "blocking": true,
+      "description": "Same ratchet, applied when a subagent (e.g. implementer) finishes its turn."
+    },
+    {
+      "id": "log-metrics",
+      "claudeEvent": "PostToolUse",
+      "claudeMatcher": "*",
+      "copilotEvent": "postToolUse",
+      "script": ".claude/hooks/log-metrics.sh",
+      "blocking": false,
+      "description": "Append one observability line per tool call to .claude/logs/metrics.jsonl."
+    }
+  ]
+}

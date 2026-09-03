@@ -1,0 +1,21 @@
+{
+  "$generated_by": "scripts/gen-hooks.mjs — do not edit by hand, edit .claude/hooks/definitions.json instead",
+  "event": "postToolUse",
+  "hooks": [
+    {
+      "script": ".claude/hooks/redact-secrets.sh",
+      "blocking": false,
+      "description": "Redact likely secrets/tokens from Bash output before it re-enters context."
+    },
+    {
+      "script": ".claude/hooks/format.sh",
+      "blocking": false,
+      "description": "Run prettier --write (+ eslint --fix for JS/TS) on the edited file."
+    },
+    {
+      "script": ".claude/hooks/log-metrics.sh",
+      "blocking": false,
+      "description": "Append one observability line per tool call to .claude/logs/metrics.jsonl."
+    }
+  ]
+}

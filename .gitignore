@@ -1,0 +1,31 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.tsbuildinfo
+
+# Claude Code ephemeral state — never commit
+.claude/state/
+.claude/logs/
+
+# env
+.env
+.env.*
+!.env.example
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# test artifacts
+coverage/
+playwright-report/
+test-results/
+storybook-static/
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*

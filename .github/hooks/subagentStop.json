@@ -1,0 +1,11 @@
+{
+  "$generated_by": "scripts/gen-hooks.mjs — do not edit by hand, edit .claude/hooks/definitions.json instead",
+  "event": "subagentStop",
+  "hooks": [
+    {
+      "script": ".claude/hooks/verify-gate.sh",
+      "blocking": true,
+      "description": "Same ratchet, applied when a subagent (e.g. implementer) finishes its turn."
+    }
+  ]
+}

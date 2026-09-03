@@ -1,0 +1,21 @@
+{
+  "$generated_by": "scripts/gen-hooks.mjs — do not edit by hand, edit .claude/hooks/definitions.json instead",
+  "event": "preToolUse",
+  "hooks": [
+    {
+      "script": ".claude/hooks/guard-destructive.sh",
+      "blocking": true,
+      "description": "Deny rm -rf outside scratch paths, force-push, hard reset, direct secret reads."
+    },
+    {
+      "script": ".claude/hooks/guard-scope.sh",
+      "blocking": true,
+      "description": "Deny writes that resolve outside the repository root."
+    },
+    {
+      "script": ".claude/hooks/guard-dangerous-html.sh",
+      "blocking": true,
+      "description": "Deny dangerouslySetInnerHTML without a sanitizer call in the same edit."
+    }
+  ]
+}
