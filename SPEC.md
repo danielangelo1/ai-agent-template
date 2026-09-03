@@ -1,6 +1,6 @@
 # SPEC.md — Contrato executável do template `frontend-agent-template`
 
-> Esta é a Fase 3 do `START.MD`. Este documento é autossuficiente: alguém (ou uma sessão limpa de Claude Code) deve conseguir gerar o repositório-template inteiro só a partir dele, seguindo o roadmap da §12. Toda decisão opinativa aqui é rastreável a um ADR em `docs/DECISIONS.md`; todo fato sobre harnesses é rastreável a `research/FINDINGS.md`; o desenho de papéis/gates é detalhado em `docs/AGENT_ARCHITECTURE.md` — esta SPEC consolida os três num contrato único e implementável.
+> Esta é a Fase 3 do `START.MD`. Este documento é autossuficiente: alguém (ou uma sessão limpa de Claude Code) deve conseguir gerar o repositório-template inteiro só a partir dele, seguindo o roadmap da §12. Toda decisão opinativa aqui é rastreável a um ADR em `docs/meta/DECISIONS.md`; todo fato sobre harnesses é rastreável a `docs/meta/FINDINGS.md`; o desenho de papéis/gates é detalhado em `docs/meta/AGENT_ARCHITECTURE.md` — esta SPEC consolida os três num contrato único e implementável.
 
 ---
 
@@ -21,7 +21,7 @@ Um repositório-template clonável (`git clone` + customização) que transforma
 
 - **Não é uma aplicação FrontEnd pronta para produção.** O `src/` do template é uma prova viva mínima do harness (uma feature de exemplo), não um produto.
 - **Não é dogmático sobre stack.** Todo item da §2 é _default trocável_ — trocar é seguir `docs/CUSTOMIZING.md`, não reescrever a arquitetura.
-- **Não é um framework multi-produto.** A pesquisa de referências (`research/FINDINGS.md` §2.4) identificou "explosão de agentes/comandos" como a armadilha nº1 de kits análogos (BMAD, claude-forge) — este template mantém roster de 6 subagents, 10 skills, 7 comandos, deliberadamente.
+- **Não é um framework multi-produto.** A pesquisa de referências (`docs/meta/FINDINGS.md` §2.4) identificou "explosão de agentes/comandos" como a armadilha nº1 de kits análogos (BMAD, claude-forge) — este template mantém roster de 6 subagents, 10 skills, 7 comandos, deliberadamente.
 - **Não garante paridade 100% entre Claude Code e Copilot.** Skills (progressive disclosure) não têm equivalente no Copilot; o gate universal (`scripts/verify.sh` via CI) é o que garante que o resultado final é o mesmo, não que a experiência de sessão seja idêntica.
 - **Não substitui revisão humana.** Os 4 checkpoints humanos do fluxo (§7) são obrigatórios, não sugestões.
 
@@ -29,7 +29,7 @@ Um repositório-template clonável (`git clone` + customização) que transforma
 
 ## 2. Preset de stack default
 
-Todas as versões confirmadas em `research/FINDINGS.md` §2.3, consultadas em 2026-09-02. Cada linha é _default trocável_ — instruções de troca em `docs/CUSTOMIZING.md` (gerado na Fase de implementação, roadmap §12, item 13).
+Todas as versões confirmadas em `docs/meta/FINDINGS.md` §2.3, consultadas em 2026-09-02. Cada linha é _default trocável_ — instruções de troca em `docs/CUSTOMIZING.md` (gerado na Fase de implementação, roadmap §12, item 13).
 
 | Camada                  | Escolha default                                                                        | Versão confirmada                                                                        | Alternativa documentada                                            |
 | ----------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -126,12 +126,12 @@ Todas as versões confirmadas em `research/FINDINGS.md` §2.3, consultadas em 20
 │       ├── plan.md
 │       └── tasks.md
 ├── docs/
-│   ├── AGENT_ARCHITECTURE.md
-│   ├── DECISIONS.md
-│   ├── CUSTOMIZING.md
-│   └── TOKEN_BUDGET.md
-├── research/
-│   └── FINDINGS.md
+│   ├── CUSTOMIZING.md                # como clonar, trocar stack, adicionar skill/subagent
+│   ├── TOKEN_BUDGET.md
+│   └── meta/                        # POR QUE o template é assim — não necessário pra usá-lo;
+│       ├── AGENT_ARCHITECTURE.md    # scripts/init.sh remove esta pasta ao inicializar um
+│       ├── DECISIONS.md             # projeto novo (mantida só neste repo de origem)
+│       └── FINDINGS.md
 ├── src/                              # app de exemplo mínima
 │   ├── components/
 │   ├── routes/
@@ -141,7 +141,9 @@ Todas as versões confirmadas em `research/FINDINGS.md` §2.3, consultadas em 20
 │   ├── unit/
 │   └── e2e/
 ├── scripts/
+│   ├── init.sh                      # setup interativo pra quem clonou o template (docs/CUSTOMIZING.md §1)
 │   ├── verify.sh                    # a pirâmide — chamável por humano, hook e CI
+│   ├── check-critical-coverage.mjs  # valida que toda task critical:true tem teste @critical (EARS-11)
 │   └── gen-hooks.mjs                # gera .github/hooks/*.json e .github/prompts/*.prompt.md a partir das fontes .claude/
 ├── .env.example
 ├── package.json                     # campo "packageManager": "pnpm@11.25.0"
@@ -153,7 +155,7 @@ Todas as versões confirmadas em `research/FINDINGS.md` §2.3, consultadas em 20
 
 ## 4. Definição de cada subagent
 
-Frontmatter completo + corpo do prompt de sistema. Nenhum subagent recebe a ferramenta `Agent` (profundidade máxima = 1, `docs/AGENT_ARCHITECTURE.md` §3.1). Nenhum é invocado via `context: fork` por default — cada um recebe contexto fresco (isolamento, economia de tokens).
+Frontmatter completo + corpo do prompt de sistema. Nenhum subagent recebe a ferramenta `Agent` (profundidade máxima = 1, `docs/meta/AGENT_ARCHITECTURE.md` §3.1). Nenhum é invocado via `context: fork` por default — cada um recebe contexto fresco (isolamento, economia de tokens).
 
 ### `.claude/agents/planner.md`
 
@@ -358,14 +360,14 @@ Estado em `.claude/state/verify-ratchet.json`:
 
 Algoritmo (roda `scripts/verify.sh --json` a cada disparo):
 
-1. **Se `stop_hook_active == true`** no payload de entrada: `exit 0` imediatamente (evita recontar um bloqueio que o próprio harness já está processando — regra de `research/FINDINGS.md` §2.1.4).
+1. **Se `stop_hook_active == true`** no payload de entrada: `exit 0` imediatamente (evita recontar um bloqueio que o próprio harness já está processando — regra de `docs/meta/FINDINGS.md` §2.1.4).
 2. Roda `scripts/verify.sh --json`. Extrai `exit_code` e `failure_count` (soma de erros de cada etapa da pirâmide, §6).
 3. **`exit_code == 0`:** grava `last_good_sha = $(git rev-parse HEAD)`, zera `last_failure_count` e `attempts_this_task`. `exit 0` — turno pode terminar.
 4. **`exit_code != 0` e `failure_count < last_failure_count`:** progresso real. Atualiza `last_failure_count`, incrementa `attempts_this_task`. `exit 2` com a lista de falhas restantes no `systemMessage`. Não reverte nada.
 5. **`exit_code != 0` e `failure_count >= last_failure_count`:** regressão ou estagnação. Roda `git diff --name-only HEAD` para listar arquivos tocados neste turno; `git checkout -- <esses arquivos>` restaura o conteúdo de `last_good_sha` **só para eles** (nunca `reset --hard` do repo inteiro — outros arquivos em progresso em paralelo não são tocados). Incrementa `attempts_this_task`. `exit 2` com mensagem: _"A última mudança piorou o resultado (X→Y falhas). Arquivos revertidos para o último estado bom. Tente uma abordagem diferente."_
-6. **`attempts_this_task >= 6`:** escreve `specs/<feature>/HANDOFF_NEEDED.md` com o histórico de tentativas (lido de um log auxiliar) e `exit 0` — deixa o turno terminar graciosamente, **antes** do cap nativo de 8 bloqueios consecutivos do Claude Code (`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`, `research/FINDINGS.md` §2.1.4), para que o handoff seja uma decisão do template, não uma interrupção forçada pelo harness.
+6. **`attempts_this_task >= 6`:** escreve `specs/<feature>/HANDOFF_NEEDED.md` com o histórico de tentativas (lido de um log auxiliar) e `exit 0` — deixa o turno terminar graciosamente, **antes** do cap nativo de 8 bloqueios consecutivos do Claude Code (`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`, `docs/meta/FINDINGS.md` §2.1.4), para que o handoff seja uma decisão do template, não uma interrupção forçada pelo harness.
 
-Isso garante as 3 únicas saídas válidas do loop: verify `0`, limite de tentativas atingido, handoff humano — nunca uma 4ª saída onde o agente se autodeclara "pronto" (`research/FINDINGS.md` §2.2.3).
+Isso garante as 3 únicas saídas válidas do loop: verify `0`, limite de tentativas atingido, handoff humano — nunca uma 4ª saída onde o agente se autodeclara "pronto" (`docs/meta/FINDINGS.md` §2.2.3).
 
 ### `.claude/settings.json` — campos relevantes
 
@@ -446,7 +448,7 @@ Isso garante as 3 únicas saídas válidas do loop: verify `0`, limite de tentat
    →  /ship (verify.sh completo + abre PR)  →  [GATE HUMANO: aprova o PR?]  →  merge
 ```
 
-Diagrama completo (Mermaid) em `docs/AGENT_ARCHITECTURE.md` (seção "Diagrama do pipeline") — reproduzido aqui é redundante, a referência é a fonte de verdade.
+Diagrama completo (Mermaid) em `docs/meta/AGENT_ARCHITECTURE.md` (seção "Diagrama do pipeline") — reproduzido aqui é redundante, a referência é a fonte de verdade.
 
 **Checkpoints humanos (4, todos obrigatórios):** aprovação de `spec.md`, aprovação de `plan.md`/`tasks.md`, decisão sobre achados de `/review` que não sejam auto-resolvíveis, aprovação final do PR em `/ship`.
 
@@ -474,11 +476,11 @@ Diagrama completo (Mermaid) em `docs/AGENT_ARCHITECTURE.md` (seção "Diagrama d
 
 1. **Contexto mínimo por subagent:** nenhum subagent do roster usa `context: fork` por default (§4) — cada um recebe só o artefato relevante (task, diff, spec), nunca a conversa completa que os originou. Exceção documentada: forks só a nível de sessão principal (Explore/pesquisa), nunca dentro do roster de 6 papéis.
 2. **Skills sob demanda:** `description` de cada skill carrega sempre (custo baixo); conteúdo completo só quando invocado/casado por `paths`. Skills-comando (`spec`, `plan`, etc.) usam `user-invocable: true`; skills de expertise usam `paths` glob quando aplicável (`component-conventions` só carrega em edições de `src/components/**`, por exemplo) para não competir por relevância com skills não relacionadas.
-3. **Tool Search para cauda longa:** o template base não empacota nenhum MCP server por padrão (mantém o preset agnóstico). Se um projeto clonado adicionar MCP servers, `docs/CUSTOMIZING.md` recomenda `defer_loading: true` para qualquer servidor com mais de ~5 tools, conforme o mecanismo de Tool Search Tool documentado em `research/FINDINGS.md` §2.2.7 (redução de até 95% no custo de contexto do setup de tools).
-4. **Política de `/compact`:** ver `docs/AGENT_ARCHITECTURE.md` §3.6 — preserva ponteiro de task ativa e status de falha atual (não o histórico completo de tentativas), descarta output de ferramenta já incorporado ao raciocínio.
-5. **Orçamento por papel e alertas:** tabela completa em `docs/AGENT_ARCHITECTURE.md` §3.5 (planner 50k, test-author 20k, implementer 60k/task, reviewer 40k, a11y-auditor 20k, refactorer 40k). Alerta em 80% via `systemMessage`; hard stop marca a task `blocked: token_budget` em `tasks.md` — mesma via de handoff humano do ratchet, não uma saída nova.
-6. **Cache:** subagents usam TTL de 5min por padrão mesmo em assinatura (`research/FINDINGS.md` §2.1.9); papéis reinvocados em lote dentro do mesmo `/implement` (`test-author`/`implementer` task após task, mesmo prefixo de sistema) podem declarar `experimental.cacheTtl: "1h"` no frontmatter quando a versão do Claude Code em uso suportar (v2.1.248+) — checar na implementação (roadmap §12, item 7) antes de assumir suporte.
-7. **`CLAUDE.md` enxuto:** <200 linhas, aponta para skills em vez de despejar conteúdo inline (§3.6 de `docs/AGENT_ARCHITECTURE.md` já especifica o conteúdo exato).
+3. **Tool Search para cauda longa:** o template base não empacota nenhum MCP server por padrão (mantém o preset agnóstico). Se um projeto clonado adicionar MCP servers, `docs/CUSTOMIZING.md` recomenda `defer_loading: true` para qualquer servidor com mais de ~5 tools, conforme o mecanismo de Tool Search Tool documentado em `docs/meta/FINDINGS.md` §2.2.7 (redução de até 95% no custo de contexto do setup de tools).
+4. **Política de `/compact`:** ver `docs/meta/AGENT_ARCHITECTURE.md` §3.6 — preserva ponteiro de task ativa e status de falha atual (não o histórico completo de tentativas), descarta output de ferramenta já incorporado ao raciocínio.
+5. **Orçamento por papel e alertas:** tabela completa em `docs/meta/AGENT_ARCHITECTURE.md` §3.5 (planner 50k, test-author 20k, implementer 60k/task, reviewer 40k, a11y-auditor 20k, refactorer 40k). Alerta em 80% via `systemMessage`; hard stop marca a task `blocked: token_budget` em `tasks.md` — mesma via de handoff humano do ratchet, não uma saída nova.
+6. **Cache:** subagents usam TTL de 5min por padrão mesmo em assinatura (`docs/meta/FINDINGS.md` §2.1.9); papéis reinvocados em lote dentro do mesmo `/implement` (`test-author`/`implementer` task após task, mesmo prefixo de sistema) podem declarar `experimental.cacheTtl: "1h"` no frontmatter quando a versão do Claude Code em uso suportar (v2.1.248+) — checar na implementação (roadmap §12, item 7) antes de assumir suporte.
+7. **`CLAUDE.md` enxuto:** <200 linhas, aponta para skills em vez de despejar conteúdo inline (§3.6 de `docs/meta/AGENT_ARCHITECTURE.md` já especifica o conteúdo exato).
 
 ---
 
@@ -486,12 +488,12 @@ Diagrama completo (Mermaid) em `docs/AGENT_ARCHITECTURE.md` (seção "Diagrama d
 
 Passos detalhados vivem em `docs/CUSTOMIZING.md` (gerado no roadmap §12, item 13); esta seção define o que esse guia **deve** cobrir, como contrato:
 
-1. **Clonar e rebatizar:** `git clone` → remover `research/`, `docs/DECISIONS.md` do fork resultante (são artefatos da geração do template, não do projeto que nasce dele) → editar a "uma frase de missão" no topo de `CLAUDE.md`.
+1. **Clonar e rebatizar:** `git clone` → `scripts/init.sh` (interativo: renomeia o projeto, remove `docs/meta/` — artefatos da geração do template, não do projeto que nasce dele — reescreve a "uma frase de missão" no topo de `CLAUDE.md`, reinicia o histórico git). Passos manuais equivalentes documentados como fallback.
 2. **Trocar uma camada de stack:** para cada linha da tabela §2, um passo a passo de "remover X, instalar Y, quais arquivos de skill/config mudam" — cobrir no mínimo: Base UI↔Radix (componentes.json + regenerar), ESLint+Prettier↔Oxlint+Prettier, Zod↔Arktype, Orval↔openapi-typescript, React↔Vue/Svelte (mudança estrutural maior — marcar como "troca de preset inteiro", não de item isolado), pnpm↔npm/yarn (comandos equivalentes de instalação, lockfile correspondente).
 3. **Adicionar uma skill:** template de `SKILL.md` mínimo + onde registrar (nenhum registro central — é descoberta por diretório).
 4. **Adicionar um subagent:** template de frontmatter mínimo + lembrete explícito de manter `tools` sem `Agent` a menos que a decisão de aumentar a profundidade seja deliberada e documentada como novo ADR no projeto que clonou.
 5. **Adaptar os gates:** como editar `.claude/hooks/definitions.json` e re-rodar `scripts/gen-hooks.mjs`; como adicionar uma nova etapa à pirâmide de `scripts/verify.sh` sem quebrar o parsing `--json` do ratchet.
-6. **Extensão recomendada como primeiro passo, não redesign:** separar `adversarial-reviewer` do `reviewer` se este se mostrar sobrecarregado (decisão registrada em `docs/DECISIONS.md`, ADR sobre roster).
+6. **Extensão recomendada como primeiro passo, não redesign:** separar `adversarial-reviewer` do `reviewer` se este se mostrar sobrecarregado (decisão registrada em `docs/meta/DECISIONS.md`, ADR sobre roster).
 
 ---
 
@@ -526,11 +528,11 @@ Lista ordenada de tasks para a próxima etapa (implementação do template a par
 6. Escrever os 7 scripts de hook em `.claude/hooks/` (§5) + `.claude/hooks/definitions.json` como fonte lógica única.
 7. Escrever `scripts/gen-hooks.mjs`, rodar para gerar `.github/hooks/*.json` e `.github/prompts/*.prompt.md` a partir das fontes `.claude/`; checar nesta etapa se a versão do Claude Code disponível suporta `experimental.cacheTtl` (v2.1.248+) antes de incluir esse campo nos frontmatters de subagent.
 8. Escrever os 6 arquivos de subagent em `.claude/agents/` (conteúdo exato da §4).
-9. Escrever as 10 skills de expertise + 7 skills-comando em `.claude/skills/` (conteúdo descrito em `docs/AGENT_ARCHITECTURE.md` §3.3/§3.4 — cada `SKILL.md` deve ser escrito com conteúdo real, não placeholder).
-10. Escrever `CLAUDE.md` seguindo exatamente o conteúdo especificado em `docs/AGENT_ARCHITECTURE.md` §3.6, checar `< 200` linhas.
+9. Escrever as 10 skills de expertise + 7 skills-comando em `.claude/skills/` (conteúdo descrito em `docs/meta/AGENT_ARCHITECTURE.md` §3.3/§3.4 — cada `SKILL.md` deve ser escrito com conteúdo real, não placeholder).
+10. Escrever `CLAUDE.md` seguindo exatamente o conteúdo especificado em `docs/meta/AGENT_ARCHITECTURE.md` §3.6, checar `< 200` linhas.
 11. Escrever `specs/_TEMPLATE/{spec,plan,tasks}.md` (templates EARS vazios, comentados) e depois **rodar o próprio pipeline uma vez** (`/spec` → `/plan` → `/implement` → `/review` → `/ship`) contra uma feature de exemplo real do `src/` de exemplo, gerando `specs/example-feature/` como prova viva — isso é o teste de integração do template inteiro, não opcional.
 12. Escrever `.github/workflows/ci.yml` (roda `scripts/verify.sh`) e `.github/workflows/copilot-setup-steps.yml` (ambiente efêmero do Copilot coding agent).
-13. Escrever `docs/CUSTOMIZING.md` (conteúdo definido em §10) e `docs/TOKEN_BUDGET.md` (conteúdo definido em `docs/AGENT_ARCHITECTURE.md` §3.5, "Métricas instrumentadas").
+13. Escrever `docs/CUSTOMIZING.md` (conteúdo definido em §10) e `docs/TOKEN_BUDGET.md` (conteúdo definido em `docs/meta/AGENT_ARCHITECTURE.md` §3.5, "Métricas instrumentadas").
 14. Escrever `README.md` (visão geral curta + link para `SPEC.md`/`docs/CUSTOMIZING.md` — não duplicar conteúdo).
 15. Rodar `scripts/verify.sh` num clone limpo (`git clone` local para um diretório novo, `pnpm install`, `./scripts/verify.sh`) e confirmar exit `0` — satisfaz critério de aceite §11.1. Repetir instalação com `npm install` e `yarn install` — critério §11.10.
 16. Validação final: revisão humana comparando o repositório gerado contra os 12 critérios de aceite da §11, item a item, com evidência de comando+output para cada um (não afirmação).

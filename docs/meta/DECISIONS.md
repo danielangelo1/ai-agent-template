@@ -8,7 +8,7 @@
 
 **Status:** Decidido (usuário, 2026-09-02).
 
-**Contexto:** O template precisa funcionar tanto com Claude Code quanto com GitHub Copilot. Os dois harnesses divergem estruturalmente: Copilot não tem Skills (progressive disclosure sob demanda) nem `settings.json` unificado; hooks nativos do Copilot são confirmados só para CLI/coding agent, não para a extensão VS Code (a superfície mais usada por devs FrontEnd) — ver `research/FINDINGS.md` §2.5.
+**Contexto:** O template precisa funcionar tanto com Claude Code quanto com GitHub Copilot. Os dois harnesses divergem estruturalmente: Copilot não tem Skills (progressive disclosure sob demanda) nem `settings.json` unificado; hooks nativos do Copilot são confirmados só para CLI/coding agent, não para a extensão VS Code (a superfície mais usada por devs FrontEnd) — ver `docs/meta/FINDINGS.md` §2.5.
 
 **Decisão:** A metodologia (SDD, specs, `scripts/verify.sh`, critérios EARS) fica **agnóstica de agente**, vivendo em `specs/` e `scripts/`. Cada agente ganha um **adapter fino**:
 
@@ -22,7 +22,7 @@
 
 **Status:** Decidido (research-informed, 2026-09-02).
 
-**Contexto:** `research/FINDINGS.md` §2.5 confirma, por doc oficial do GitHub, que o Copilot lê diretamente um único `CLAUDE.md` (ou `GEMINI.md`) na raiz como alternativa ao `AGENTS.md`/`copilot-instructions.md`.
+**Contexto:** `docs/meta/FINDINGS.md` §2.5 confirma, por doc oficial do GitHub, que o Copilot lê diretamente um único `CLAUDE.md` (ou `GEMINI.md`) na raiz como alternativa ao `AGENTS.md`/`copilot-instructions.md`.
 
 **Decisão:** Manter `CLAUDE.md` como o único arquivo de instruções persistentes na raiz do template, lido nativamente por ambos os agentes. Não duplicar conteúdo em `AGENTS.md`.
 
@@ -32,7 +32,7 @@
 
 **Status:** Decidido (research-informed, 2026-09-02).
 
-**Contexto:** VS Code Copilot lê `.claude/agents/` nativamente, rotulado "Workspace (Claude format)" (`research/FINDINGS.md` §2.5, item 4).
+**Contexto:** VS Code Copilot lê `.claude/agents/` nativamente, rotulado "Workspace (Claude format)" (`docs/meta/FINDINGS.md` §2.5, item 4).
 
 **Decisão:** Definir subagents uma única vez em `.claude/agents/*.md` (frontmatter Claude Code). Não manter uma cópia paralela em `.github/agents/*.agent.md` a menos que um campo específico do Copilot (ex.: `handoffs`) seja estritamente necessário e não expressável no frontmatter do Claude Code — nesse caso, gerar o `.agent.md` a partir do `.md` original via script, não escrever à mão.
 
@@ -40,7 +40,7 @@
 
 ## ADR-004 — Linter/formatter: ESLint + Prettier (não Oxlint/Oxfmt)
 
-**Status:** Decidido (usuário, 2026-09-02), substitui a recomendação inicial de `research/FINDINGS.md` §2.3.
+**Status:** Decidido (usuário, 2026-09-02), substitui a recomendação inicial de `docs/meta/FINDINGS.md` §2.3.
 
 **Contexto:** A pesquisa de Fase 1 apontou Oxlint (v1.60, estável) + Prettier como combinação recomendada por velocidade, com Oxfmt marcado como "watch item" (beta). O usuário optou por ESLint + Prettier de forma explícita, independentemente da velocidade do Oxlint.
 
@@ -52,7 +52,7 @@
 
 **Status:** Decidido (usuário, 2026-09-02).
 
-**Contexto:** `research/FINDINGS.md` §2.3 confirma pnpm 11.25 com catalogs. O usuário quer pnpm como padrão mas sem travar quem usa npm/yarn.
+**Contexto:** `docs/meta/FINDINGS.md` §2.3 confirma pnpm 11.25 com catalogs. O usuário quer pnpm como padrão mas sem travar quem usa npm/yarn.
 
 **Decisão:** pnpm é o gerenciador **recomendado e testado em CI**, declarado via campo `packageManager` (`corepack`) no `package.json`. Para manter compatibilidade real com npm/yarn: (1) não usar sintaxe exclusiva de pnpm nos `scripts` do `package.json` (nada de `pnpm -r` embutido em scripts que rodam via `npm run`/`yarn run`); (2) evitar depender de **catalogs** do pnpm-workspace para dependências do app-exemplo, já que catalogs não têm equivalente em npm/yarn workspaces; (3) documentar em `docs/CUSTOMIZING.md` (Fase 3) o comando equivalente de instalação para as 3 ferramentas.
 
@@ -60,16 +60,16 @@
 
 ---
 
-## Itens resolvidos na Fase 2 (ver `docs/AGENT_ARCHITECTURE.md`)
+## Itens resolvidos na Fase 2 (ver `docs/meta/AGENT_ARCHITECTURE.md`)
 
-- **Mecânica exata do ratchet** — resolvida em `docs/AGENT_ARCHITECTURE.md` §3.2: estado em `.claude/state/verify-ratchet.json`, comparação de contagem de falhas entre tentativas, reversão cirúrgica dos arquivos tocados no turno em caso de regressão, handoff humano em 6 tentativas (antes do cap nativo de 8 bloqueios do Claude Code).
-- **`adversarial-reviewer` como papel dedicado** — decidido **não** criar um 7º papel; mutation-testing/verificação adversarial fica dentro do mandato do `reviewer` existente, para manter o roster enxuto (`docs/AGENT_ARCHITECTURE.md` §3.1). Revisitar como primeira extensão em `docs/CUSTOMIZING.md` se `reviewer` se mostrar sobrecarregado na prática.
+- **Mecânica exata do ratchet** — resolvida em `docs/meta/AGENT_ARCHITECTURE.md` §3.2: estado em `.claude/state/verify-ratchet.json`, comparação de contagem de falhas entre tentativas, reversão cirúrgica dos arquivos tocados no turno em caso de regressão, handoff humano em 6 tentativas (antes do cap nativo de 8 bloqueios do Claude Code).
+- **`adversarial-reviewer` como papel dedicado** — decidido **não** criar um 7º papel; mutation-testing/verificação adversarial fica dentro do mandato do `reviewer` existente, para manter o roster enxuto (`docs/meta/AGENT_ARCHITECTURE.md` §3.1). Revisitar como primeira extensão em `docs/CUSTOMIZING.md` se `reviewer` se mostrar sobrecarregado na prática.
 
 ## ADR-006 — Componentes: Base UI como default (não Radix) — **AMENDADO na implementação, 2026-09-02**
 
 **Status:** Decidido na Fase 3 (Base UI), **revertido para Radix UI na implementação** após verificação ao vivo do npm.
 
-**Contexto original:** `research/FINDINGS.md` §2.3 relatou Base UI "1.0 estável desde dez/2025", mantido pela equipe MUI, e que o shadcn/ui mudara seu default para Base UI em jul/2026.
+**Contexto original:** `docs/meta/FINDINGS.md` §2.3 relatou Base UI "1.0 estável desde dez/2025", mantido pela equipe MUI, e que o shadcn/ui mudara seu default para Base UI em jul/2026.
 
 **Correção encontrada na implementação:** `npm view @base-ui-components/react dist-tags` (checado ao vivo, 2026-09-02) mostra **`latest: 1.0.0-rc.0`**, publicado em 2025-12-04 — release candidate, não uma 1.0.0 final. A pesquisa da Fase 1 estava imprecisa nesse ponto específico (confundiu "atingiu RC" com "estável"). Isso é exatamente o tipo de divergência que `START.MD` pede para verificar antes de instalar, não confiar no relatório de pesquisa como fato definitivo.
 
@@ -81,7 +81,7 @@
 
 **Status:** Decidido (Fase 3, 2026-09-02).
 
-**Contexto:** Vite 8.2.x já usa Rolldown (bundler Rust) por padrão, sem opt-in — não é a mesma coisa que "Vite+" (toolchain unificado ainda em beta, com incerteza de governança pós-aquisição do VoidZero pelo Cloudflare em jun/2026, `research/FINDINGS.md` §2.3).
+**Contexto:** Vite 8.2.x já usa Rolldown (bundler Rust) por padrão, sem opt-in — não é a mesma coisa que "Vite+" (toolchain unificado ainda em beta, com incerteza de governança pós-aquisição do VoidZero pelo Cloudflare em jun/2026, `docs/meta/FINDINGS.md` §2.3).
 
 **Decisão:** Preset usa **Vite 8** puro. "Vite+" fica fora do preset, citado em `docs/CUSTOMIZING.md` como "watch item" a reavaliar quando sair de beta.
 
@@ -93,7 +93,7 @@
 
 **Status:** Decidido (Fase 2, formalizado na Fase 3).
 
-**Contexto:** `research/FINDINGS.md` §2.1.1 confirma que custom commands foram fundidas em Skills no Claude Code — um skill com `user-invocable: true` cria o slash-command. A pasta `.claude/commands/*.md` é forma legada que ainda funciona, mas não é mais a canônica.
+**Contexto:** `docs/meta/FINDINGS.md` §2.1.1 confirma que custom commands foram fundidas em Skills no Claude Code — um skill com `user-invocable: true` cria o slash-command. A pasta `.claude/commands/*.md` é forma legada que ainda funciona, mas não é mais a canônica.
 
 **Decisão:** O template usa **só** `.claude/skills/<nome>/SKILL.md` para tudo — tanto os 7 comandos do pipeline (`/spec`, `/plan`, `/tasks`, `/implement`, `/tdd`, `/review`, `/ship`, todos com `user-invocable: true`) quanto as 10 skills de expertise de stack/cross-cutting (carregadas automaticamente por `description`/`paths`, sem `user-invocable`). Não existe `.claude/commands/` no template.
 

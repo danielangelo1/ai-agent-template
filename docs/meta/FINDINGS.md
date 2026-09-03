@@ -18,7 +18,7 @@ Regra de ouro CLAUDE.md vs Skill: **CLAUDE.md deve ficar abaixo de 200 linhas**;
 
 **Fonte:** https://code.claude.com/docs/en/features-overview — verificado 2026-09-02.
 
-**Implicação para o template:** `.claude/commands/` como pasta separada é um padrão legado que ainda funciona, mas a forma canônica atual de empacotar um slash-command é um Skill (`.claude/skills/<nome>/SKILL.md`) com `user-invocable: true` — reconsiderar §4.3 da estrutura de diretórios do START.MD (ver `docs/DECISIONS.md`).
+**Implicação para o template:** `.claude/commands/` como pasta separada é um padrão legado que ainda funciona, mas a forma canônica atual de empacotar um slash-command é um Skill (`.claude/skills/<nome>/SKILL.md`) com `user-invocable: true` — reconsiderar §4.3 da estrutura de diretórios do START.MD (ver `docs/meta/DECISIONS.md`).
 
 ### 2.1.2 Formato SKILL.md — frontmatter completo e descoberta
 
@@ -332,7 +332,7 @@ Pesquisa em 2026-09-02, complementar à §2.1. Objetivo: mapear cada superfície
 | Hooks (20+ eventos, Stop com cap 8)                | Hooks nativos (8 eventos, mesmo padrão allow/deny/ask) — confirmado só CLI/coding agent, não confirmado na extensão VS Code | **Mapeamento parcial — gerar `.github/hooks/*.json` a partir da mesma definição lógica; CI/git hooks (husky/lefthook) como fallback universal onde hooks nativos não cobrem** |
 | `settings.json`                                    | Fragmentado (managed-settings.json, content-exclusion API, permission picker, hooks separados)                              | **Sem equivalente unificado — adapter necessário**                                                                                                                            |
 
-### Decisão de arquitetura decorrente (registrada em `docs/DECISIONS.md`)
+### Decisão de arquitetura decorrente (registrada em `docs/meta/DECISIONS.md`)
 
 A pesquisa confirma que a abordagem escolhida pelo usuário — **núcleo agnóstico de agente (specs/, `scripts/verify.sh`, metodologia SDD) + adapters finos por agente** — é viável e tem 2 pontos de convergência real (não apenas adapter): `CLAUDE.md` como arquivo único lido por ambos, e `.claude/agents/*.md` como diretório de subagents lido nativamente pelo Copilot no VS Code. O gate determinístico "duro" (equivalente ao Stop hook) não pode depender só de hooks nativos do Copilot porque a cobertura na extensão VS Code não está confirmada — por isso `scripts/verify.sh` rodando via CI (GitHub Actions) + git hooks tradicionais (husky/lefthook) precisa ser a fonte de verdade universal, com os hooks nativos de cada agente (Claude Code `Stop`, Copilot `preToolUse`/`agentStop`) como otimização de feedback rápido dentro da sessão, não como gate final.
 

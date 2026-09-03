@@ -1,7 +1,7 @@
 # TOKEN_BUDGET.md
 
 Observability for the harness itself — cost per task, cache hit rate, tool-call count. See
-`docs/AGENT_ARCHITECTURE.md` §3.5 for the per-role budget table and the design rationale.
+`docs/meta/AGENT_ARCHITECTURE.md` §3.5 for the per-role budget table and the design rationale.
 
 ## Where the data comes from
 
@@ -41,11 +41,11 @@ jq -s '[.[] | select(.role != "main" and .tokens_in != null)] |
 
 - **Cache hit rate near 0% for repeated subagent roles** (`test-author`/`implementer` called
   task after task in the same `/implement` run): subagents default to a 5-minute cache TTL
-  even on a subscription plan (`research/FINDINGS.md` §2.1.9). If tasks are spaced further
+  even on a subscription plan (`docs/meta/FINDINGS.md` §2.1.9). If tasks are spaced further
   apart than 5 minutes, each pays full cache-write cost. Fix: set
   `experimental.cacheTtl: "1h"` in the relevant subagent's frontmatter if your Claude Code
   version supports it (v2.1.248+ — check with `claude --version` before relying on this).
-- **A role consistently near its budget cap** (`docs/AGENT_ARCHITECTURE.md` §3.5 table): either
+- **A role consistently near its budget cap** (`docs/meta/AGENT_ARCHITECTURE.md` §3.5 table): either
   the role's tasks are genuinely larger than the template's default assumption (raise the
   budget — it's a convention, not enforced code, see `CUSTOMIZING.md` §7), or the task
   decomposition from `planner` is too coarse (fix the plan, not the budget).
