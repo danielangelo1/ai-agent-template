@@ -1,7 +1,7 @@
 name: Copilot Setup Steps
 
 # Runs before the Copilot coding agent starts working in this repo, to prepare its
-# ephemeral environment (SPEC.md §5 / research/FINDINGS.md §2.5, item 7). The job
+# ephemeral environment (SPEC.md §5 / docs/meta/FINDINGS.md §2.5, item 7). The job
 # name "copilot-setup-steps" is required by GitHub — do not rename it.
 
 on:

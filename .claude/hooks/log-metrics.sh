@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PostToolUse(*) — append one observability line per tool call. Never
-# blocks. SPEC.md §5, hook #7 / docs/AGENT_ARCHITECTURE.md §3.5.
+# blocks. SPEC.md §5, hook #7 / docs/meta/AGENT_ARCHITECTURE.md §3.5.
 set -uo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"

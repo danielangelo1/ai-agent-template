@@ -65,7 +65,7 @@ fi
 attempts=$((attempts + 1))
 
 # Case 3: attempt cap reached — hand off to a human gracefully, BEFORE the
-# native Claude Code Stop-hook block cap of 8 (research/FINDINGS.md §2.1.4).
+# native Claude Code Stop-hook block cap of 8 (docs/meta/FINDINGS.md §2.1.4).
 if [[ $attempts -ge $MAX_ATTEMPTS ]]; then
   feature="$(cat "$ACTIVE_FEATURE_FILE" 2>/dev/null || echo "")"
   if [[ -n "$feature" && -d "$REPO_ROOT/specs/$feature" ]]; then
