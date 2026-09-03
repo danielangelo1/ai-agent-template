@@ -41,7 +41,7 @@ STEP_CMDS=(
   "$BIN/tsc -b"
   "$BIN/eslint ."
   "$BIN/vitest run"
-  "$BIN/playwright test --grep @critical"
+  "node scripts/check-critical-coverage.mjs && $BIN/playwright test --grep @critical"
   "$BIN/vite build"
   "$BIN/playwright test --grep @a11y"
 )
